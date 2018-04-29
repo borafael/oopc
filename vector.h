@@ -2,6 +2,7 @@
 #define __VECTOR_H__
 
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct {
 	float x;
@@ -13,6 +14,10 @@ Vector* create_vector(float x, float y);
 float get_x(Vector* v);
 
 float get_y(Vector* v);
+
+float norm(Vector* v);
+
+Vector* scale(Vector* v, float s);
 
 void destroy_vector(Vector* vector);
 

@@ -1,7 +1,10 @@
 CC=gcc
-CFLAGS := -g -Wall
+CFLAGS := -g -Wall -lm
 INPUT=main.c vector.c
 OUTPUT=main
 
 compile:
-	$(CC) $(CFLAGS) -o $(OUTPUT) $(INPUT)
+	$(CC) -o $(OUTPUT) $(INPUT) $(CFLAGS)
+
+clean:
+	rm $(OUTPUT)
