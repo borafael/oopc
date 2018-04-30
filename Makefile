@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS := -g -Wall -lm
-INPUT=main.c vector.c
+INPUT=main.c vector.c GameLoop.c ServiceLocator.c
 OUTPUT=main
 
 compile:
