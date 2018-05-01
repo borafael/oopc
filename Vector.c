@@ -1,4 +1,4 @@
-#include "vector.h"
+#include "Vector.h"
 
 Vector* create_vector(float x, float y) {
 	Vector* v = (Vector*)malloc(sizeof(Vector));
