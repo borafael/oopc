@@ -61,6 +61,7 @@ void put_pixel(FrameBuffer* fb, Pixel p, Color c) {
 }
 
 void close_frame_buffer(FrameBuffer* fb) { 
-    munmap(fb->fbp, fb->screensize);
-    close(fb->fbfd);
+	munmap(fb->fbp, fb->screensize);
+	close(fb->fbfd);
+	free(fb);
 }
