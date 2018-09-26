@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
 			p.x = x;
 			p.y = y;
 			Color c;
-			c.r = x * 255 / 1280;
+			c.r = x * 255 / get_h_res(fb);
 			c.g = 0;	
 			c.b = 0;
 			put_pixel(fb, p, c);
