@@ -42,6 +42,14 @@ FrameBuffer* init_frame_buffer() {
 	return fb;
 }
 
+int get_h_res(FrameBuffer* fb) {
+	return fb->vinfo.xres;
+}
+
+int get_v_res(FrameBuffer* fb) {
+	return fb->vinfo.yres;
+}
+
 void put_pixel(FrameBuffer* fb, Pixel p, Color c) {
 
 	if(p.x > 0 && p.x < fb->vinfo.xres && p.y > 0 && p.y < fb->vinfo.yres) {

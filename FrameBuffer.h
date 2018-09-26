@@ -30,6 +30,10 @@ typedef struct {
 
 FrameBuffer* init_frame_buffer();
 
+int get_h_res(FrameBuffer* fb);
+
+int get_v_res(FrameBuffer* fb);
+
 void put_pixel(FrameBuffer* fb, Pixel p, Color c);
 
 void close_frame_buffer(FrameBuffer* fb); 

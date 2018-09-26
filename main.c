@@ -4,13 +4,13 @@
 int main(int argc, char** argv) {
 	FrameBuffer* fb = init_frame_buffer();
 	
-	for(int x = 0; x < 400; x++) {
-		for(int y = 0; y < 400; y++) {
+	for(int x = 0; x < get_h_res(fb); x++) {
+		for(int y = 0; y < get_v_res(fb); y++) {
 			Pixel p;
 			p.x = x;
 			p.y = y;
 			Color c;
-			c.r = x * y;
+			c.r = x * 255 / 1280;
 			c.g = 0;	
 			c.b = 0;
 			put_pixel(fb, p, c);
