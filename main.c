@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 
 	ServiceLocator* sl = create_service_locator(10);
 
-	GameLoop* gl = create_game_loop(&handle_input, &update, &render, & should_continue);
+	GameLoop* gl = create_game_loop(&handle_input, &update, &render, &should_continue);
 	start_game_loop(gl, sl);
 	destroy_game_loop(gl);
 
