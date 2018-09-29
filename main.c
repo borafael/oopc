@@ -1,21 +1,24 @@
 #include <stdio.h>
-#include "FrameBuffer.h"
+#include "GameLoop.h"
+
+void handle_input(ServiceLocator* sl) {}
+
+void update(ServiceLocator* sl) {}
+
+void render(ServiceLocator* sl) {}
+
+int should_continue(ServiceLocator* sl) {
+	return 0;
+}
 
 int main(int argc, char** argv) {
-	FrameBuffer* fb = init_frame_buffer();
-	
-	for(int x = 0; x < get_h_res(fb); x++) {
-		for(int y = 0; y < get_v_res(fb); y++) {
-			Pixel p;
-			p.x = x;
-			p.y = y;
-			Color c;
-			c.r = x * 255 / get_h_res(fb);
-			c.g = 0;	
-			c.b = 0;
-			put_pixel(fb, p, c);
-		}
-	}
-	close_frame_buffer(fb);
+
+	ServiceLocator* sl = create_service_locator(10);
+
+	GameLoop* gl = create_game_loop(&handle_input, &update, &render, & should_continue);
+	start_game_loop(gl, sl);
+	destroy_game_loop(gl);
+
+	destroy_service_locator(sl);
 	return 0;
 }
