@@ -149,3 +149,62 @@ int main() {
 		close(kb);
 	return 1;
 }
+
+/* Our key-mapping table. This will contain printable characters
+for some keys. */
+char keymap[NR_KEYS];
+/* We’ll assign names to certain keys. */
+char *keynames[NR_KEYS];
+/* Locates the arrow keys and the Escape key in the kernel’s keymaps.
+Fills in the appropriate globals. */
+void init_keymap(int kb)
+{
+struct kbentry entry;
+int keycode;
+for (keycode = 0; keycode < NR_KEYS; keycode++) {
+keymap[keycode] = ' ';
+keynames[keycode] = "(unknown)";
+/* Look up this key. If the lookup fails, ignore.
+If it succeeds, KVAL(entry.kb_value) will be the
+8-bit representation of the character the kernel
+has mapped to this keycode. */
+entry.kb_table = 0;
+entry.kb_index = keycode;
+if (ioctl(kb, KDGKBENT, &entry) != 0) continue;
+/* Is this a printable character?
+NOTE: we do not handle Unicode translation here.
+See the SDL source (SDL_fbevents.c) for
+an example of how this can be done.
+Add in KT_LATIN and KT_ASCII if you want a wider
+range of characters. They’re omitted here because
+some characters do not print cleanly. */
+if (KTYP(entry.kb_value) == KT_LETTER) {
+keymap[keycode] = KVAL(entry.kb_value);
+keynames[keycode] = "(letter)";
+}
+/* Since the arrow keys are useful in games, we’ll pick
+them out of the swarm. While we’re at it, we’ll grab
+Enter, Ctrl, and Alt. */
+if (entry.kb_value == K_LEFT)
+keynames[keycode] = "Left arrow";
+if (entry.kb_value == K_RIGHT)
+keynames[keycode] = "Right arrow";
+if (entry.kb_value == K_DOWN)
+keynames[keycode] = "Down arrow";
+if (entry.kb_value == K_UP)
+keynames[keycode] = "Up arrow";
+if (entry.kb_value == K_ENTER)
+keynames[keycode] = "Enter";
+if (entry.kb_value == K_ALT)
+keynames[keycode] = "Left Alt";
+if (entry.kb_value == K_ALTGR)
+keynames[keycode] = "Right Alt";
+}
+/* Manually plug in keys that the kernel doesn’t
+normally map correctly. */
+keynames[29] = "Left control";
+keynames[97] = "Right control";
+keynames[125] = "Left Linux key";   /* usually mislabelled */
+keynames[126] = "Right Linux key";  /* with a Windows(tm) logo */
+keynames[127] = "Application key";
+}
