@@ -1,11 +1,11 @@
-/* 
+/*
 Simple keycode viewer, very similar to the showkey program.
 Run it from a virtual terminal. If something goes wrong and
 you can’t use your console, press Alt-SysRq-R to get the
 keyboard out of raw mode (this assumes Magic SysRq is
 compiled into your kernel -- it’s very useful!)
 This code was not derived from showkey, but credit goes to
-its authors for guidance. 
+its authors for guidance.
 */
 
 #include <unistd.h>
@@ -17,7 +17,73 @@ its authors for guidance.
 #include <linux/keyboard.h>
 #include <linux/kd.h>
 
-/* Checks whether or not the given file descriptor is associated with a local keyboard. Returns 1 if it is, 0 if not (or if something prevented us from checking). */
+/* Our key-mapping table. This will contain printable characters
+for some keys. */
+char keymap[NR_KEYS];
+
+/* We’ll assign names to certain keys. */
+char *keynames[NR_KEYS];
+
+/* Locates the arrow keys and the Escape key in the kernel’s keymaps.
+Fills in the appropriate globals. */
+void init_keymap(int kb) {
+	struct kbentry entry;
+	int keycode;
+
+	for (keycode = 0; keycode < NR_KEYS; keycode++) {
+		keymap[keycode] = ' ';
+		keynames[keycode] = "(unknown)";
+		/* Look up this key. If the lookup fails, ignore.
+		If it succeeds, KVAL(entry.kb_value) will be the
+		8-bit representation of the character the kernel
+		has mapped to this keycode. */
+		entry.kb_table = 0;
+		entry.kb_index = keycode;
+		if (ioctl(kb, KDGKBENT, &entry) != 0) continue;
+		/* Is this a printable character?
+		NOTE: we do not handle Unicode translation here.
+		See the SDL source (SDL_fbevents.c) for
+		an example of how this can be done.
+		Add in KT_LATIN and KT_ASCII if you want a wider
+		range of characters. They’re omitted here because
+		some characters do not print cleanly. */
+		if (KTYP(entry.kb_value) == KT_LETTER) {
+			keymap[keycode] = KVAL(entry.kb_value);
+			keynames[keycode] = "(letter)";
+		}
+		/* Since the arrow keys are useful in games, we’ll pick
+		them out of the swarm. While we’re at it, we’ll grab
+		Enter, Ctrl, and Alt. */
+		if (entry.kb_value == K_LEFT)
+			keynames[keycode] = "Left arrow";
+		if (entry.kb_value == K_RIGHT)
+			keynames[keycode] = "Right arrow";
+		if (entry.kb_value == K_DOWN)
+			keynames[keycode] = "Down arrow";
+		if (entry.kb_value == K_UP)
+			keynames[keycode] = "Up arrow";
+		if (entry.kb_value == K_ENTER)
+			keynames[keycode] = "Enter";
+		if (entry.kb_value == K_ALT)
+			keynames[keycode] = "Left Alt";
+		if (entry.kb_value == K_ALTGR)
+			keynames[keycode] = "Right Alt";
+	}
+
+	/* Manually plug in keys that the kernel doesn’t
+	normally map correctly. */
+	keynames[29] = "Left control";
+	keynames[97] = "Right control";
+	keynames[125] = "Left Linux key";   /* usually mislabelled */
+	keynames[126] = "Right Linux key";  /* with a Windows(tm) logo */
+	keynames[127] = "Application key";
+}
+
+/*
+Checks whether or not the given file descriptor is associated with a local
+keyboard. Returns 1 if it is, 0 if not (or if something prevented us from
+checking).
+*/
 int is_keyboard(int fd) {
 
 	int data;
@@ -48,7 +114,7 @@ int is_keyboard(int fd) {
 
 int main() {
 	struct termios old_term, new_term;
-	int kb = -1; 
+	int kb = -1;
 	/* keyboard file descriptor */
 	char *files_to_try[] = {"/dev/tty", "/dev/console", NULL};
 	int old_mode = -1;
@@ -57,7 +123,7 @@ int main() {
 	system’s keyboard. This should be /dev/tty, /dev/console,
 	stdin, stdout, or stderr. We’ll try them in that order.
 	If none are acceptable, we’re probably not being run
-	from a VT. 
+	from a VT.
 	*/
 
 	for (i = 0; files_to_try[i] != NULL; i++) {
@@ -112,16 +178,19 @@ int main() {
 		printf("Unable to set mediumraw mode.\n");
 		goto error;
 	}
+
+	init_keymap(kb);
+
 	printf("Reading keycodes. Press Escape (keycode 1) to exit.\n");
 	for (;;) {
 		unsigned char data;
 		if (read(kb, &data, 1) < 1) {
-		printf("Unable to read data. Trying to exit nicely.\n");
-		goto error;
+			printf("Unable to read data. Trying to exit nicely.\n");
+			goto error;
 		}
 		/* Print the keycode. The top bit is the pressed/released
 		flag, and the lower seven are the keycode. */
-		printf("%s: %2Xh (%i)\n", (data & 0x80) ? "Released" : " Pressed", (unsigned int)data & 0x7F, (unsigned int)data & 0x7F);
+		printf("%s: %2Xh (%i) %s\n", (data & 0x80) ? "Released" : " Pressed", (unsigned int)data & 0x7F, (unsigned int)data & 0x7F, keynames[data & 0x7f]);
 		if ((data & 0x7F) == 1) {
 			printf("Escape pressed.\n");
 			break;
@@ -132,7 +201,7 @@ int main() {
 	ioctl(kb, KDSKBMODE, old_mode);
 	tcsetattr(kb, 0, &old_term);
 	if (kb > 3)
-	close(kb);
+		close(kb);
 	return 0;
 	error:
 	printf("Cleaning up.\n");
@@ -148,63 +217,4 @@ int main() {
 	if (kb > 3)
 		close(kb);
 	return 1;
-}
-
-/* Our key-mapping table. This will contain printable characters
-for some keys. */
-char keymap[NR_KEYS];
-/* We’ll assign names to certain keys. */
-char *keynames[NR_KEYS];
-/* Locates the arrow keys and the Escape key in the kernel’s keymaps.
-Fills in the appropriate globals. */
-void init_keymap(int kb)
-{
-struct kbentry entry;
-int keycode;
-for (keycode = 0; keycode < NR_KEYS; keycode++) {
-keymap[keycode] = ' ';
-keynames[keycode] = "(unknown)";
-/* Look up this key. If the lookup fails, ignore.
-If it succeeds, KVAL(entry.kb_value) will be the
-8-bit representation of the character the kernel
-has mapped to this keycode. */
-entry.kb_table = 0;
-entry.kb_index = keycode;
-if (ioctl(kb, KDGKBENT, &entry) != 0) continue;
-/* Is this a printable character?
-NOTE: we do not handle Unicode translation here.
-See the SDL source (SDL_fbevents.c) for
-an example of how this can be done.
-Add in KT_LATIN and KT_ASCII if you want a wider
-range of characters. They’re omitted here because
-some characters do not print cleanly. */
-if (KTYP(entry.kb_value) == KT_LETTER) {
-keymap[keycode] = KVAL(entry.kb_value);
-keynames[keycode] = "(letter)";
-}
-/* Since the arrow keys are useful in games, we’ll pick
-them out of the swarm. While we’re at it, we’ll grab
-Enter, Ctrl, and Alt. */
-if (entry.kb_value == K_LEFT)
-keynames[keycode] = "Left arrow";
-if (entry.kb_value == K_RIGHT)
-keynames[keycode] = "Right arrow";
-if (entry.kb_value == K_DOWN)
-keynames[keycode] = "Down arrow";
-if (entry.kb_value == K_UP)
-keynames[keycode] = "Up arrow";
-if (entry.kb_value == K_ENTER)
-keynames[keycode] = "Enter";
-if (entry.kb_value == K_ALT)
-keynames[keycode] = "Left Alt";
-if (entry.kb_value == K_ALTGR)
-keynames[keycode] = "Right Alt";
-}
-/* Manually plug in keys that the kernel doesn’t
-normally map correctly. */
-keynames[29] = "Left control";
-keynames[97] = "Right control";
-keynames[125] = "Left Linux key";   /* usually mislabelled */
-keynames[126] = "Right Linux key";  /* with a Windows(tm) logo */
-keynames[127] = "Application key";
 }
