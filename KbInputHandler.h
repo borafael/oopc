@@ -31,7 +31,11 @@ typedef struct {
 
 KbInputHandler* create_kb_input_handler();
 
+void capture_kb(KbInputHandler* kb_input_handler);
+
 KbInput get_kb_input(KbInputHandler* kb_input_handler);
+
+void release_kb(KbInputHandler* kb_input_handler);
 
 void destroy_kb_input_handler(KbInputHandler* kb_input_handler);
 

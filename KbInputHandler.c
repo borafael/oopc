@@ -118,6 +118,11 @@ int get_kb_fd() {
 	return fd;
 }
 
+KbInputHandler* create_kb_input_handler() {
+	KbInputHandler* kb_input_handler = (KbInputHandler*)malloc(sizeof(KbInputHandler));
+	return kb_input_handler;
+}
+
 void capture_kb(KbInputHandler* kb_input_handler) {
 	struct termios new_term;
 
@@ -157,18 +162,6 @@ void capture_kb(KbInputHandler* kb_input_handler) {
 	init_keymap(kb_input_handler);
 }
 
-void release_kb(KbInputHandler* kb_input_handler) {
-		printf("Exiting normally.\n");
-		ioctl(kb_input_handler->kb_fd, KDSKBMODE, kb_input_handler->old_mode);
-		tcsetattr(kb_input_handler->kb_fd, 0, &kb_input_handler->old_term);
-}
-
-KbInputHandler* create_input_handler() {
-	KbInputHandler* kb_input_handler = (KbInputHandler*)malloc(sizeof(KbInputHandler));
-	capture_kb(kb_input_handler);
-	return kb_input_handler;
-}
-
 KbInput get_kb_input(KbInputHandler* kb_input_handler) {
 	KbInput kb_input;
 
@@ -184,7 +177,12 @@ KbInput get_kb_input(KbInputHandler* kb_input_handler) {
 	return kb_input;
 }
 
+void release_kb(KbInputHandler* kb_input_handler) {
+		printf("Exiting normally.\n");
+		ioctl(kb_input_handler->kb_fd, KDSKBMODE, kb_input_handler->old_mode);
+		tcsetattr(kb_input_handler->kb_fd, 0, &kb_input_handler->old_term);
+}
+
 void destroy_kb_input_handler(KbInputHandler* kb_input_handler) {
-	release_kb(kb_input_handler);
 	free(kb_input_handler);
 }
