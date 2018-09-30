@@ -26,6 +26,7 @@ typedef struct {
 
 typedef struct {
 	char key_code;
+	char* key_name;
 	int is_release;
 } KbInput;
 

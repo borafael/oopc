@@ -172,6 +172,7 @@ KbInput get_kb_input(KbInputHandler* kb_input_handler) {
 	}
 
 	kb_input.key_code = (unsigned int)data & 0x7F;
+	kb_input.key_name = kb_input_handler->keynames[(unsigned int)data & 0x7F];
 	kb_input.is_release = (data & 0x80);
 
 	return kb_input;
